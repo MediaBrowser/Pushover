@@ -70,7 +70,7 @@
 
                         })[0] || {};
 
-                        $('#chkEnablePushOver', page).checked(pushOverConfig.Enabled || false).checkboxradio("refresh");
+                        page.querySelector('#chkEnablePushOver').checked = pushOverConfig.Enabled || false;
                         $('#txtPushOverAuthKey', page).val(pushOverConfig.Token || '');
                         $('#txtPushOverUserKey', page).val(pushOverConfig.UserKey || '');
                         $('#txtPushOverDeviceName', page).val(pushOverConfig.DeviceName || '');
@@ -133,7 +133,7 @@
 
                             return '<option value="' + user.Id + '">' + user.Name + '</option>';
 
-                        })).selectmenu('refresh').trigger('change');
+                        })).trigger('change');
 
                     });
 
@@ -163,7 +163,7 @@
 
                         pushOverConfig.MediaBrowserUserId = userId;
 
-                        pushOverConfig.Enabled = $('#chkEnablePushOver', form).checked();
+                        pushOverConfig.Enabled = form.querySelector('#chkEnablePushOver').checked;
                         pushOverConfig.Token = $('#txtPushOverAuthKey', form).val();
                         pushOverConfig.UserKey = $('#txtPushOverUserKey', form).val();
                         pushOverConfig.DeviceName = $('#txtPushOverDeviceName', form).val();
