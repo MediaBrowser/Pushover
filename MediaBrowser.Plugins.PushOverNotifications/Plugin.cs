@@ -4,33 +4,60 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Plugins.PushOverNotifications.Configuration;
 using System.IO;
 using MediaBrowser.Model.Drawing;
+using System.Linq;
 
 namespace MediaBrowser.Plugins.PushOverNotifications
 {
     /// <summary>
     /// Class Plugin
     /// </summary>
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+    public class Plugin : BasePlugin, IHasWebPages, IHasThumbImage, IHasTranslations
     {
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
-            : base(applicationPaths, xmlSerializer)
-        {
-            Instance = this;
-        }
-
         public IEnumerable<PluginPageInfo> GetPages()
         {
             return new[]
             {
                 new PluginPageInfo
                 {
-                    Name = Name,
-                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.config.html"
+                    Name = "pushovernotifications",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushover.html",
+                    EnableInMainMenu = true,
+                    MenuIcon = "notifications"
+                },
+                new PluginPageInfo
+                {
+                    Name = "pushovernotificationsjs",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushover.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "pushovernotificationeditorjs",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushovereditor.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "pushovereditortemplate",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushovereditor.template.html"
                 }
             };
+        }
+
+        public TranslationInfo[] GetTranslations()
+        {
+            var basePath = GetType().Namespace + ".strings.";
+
+            return GetType()
+                .Assembly
+                .GetManifestResourceNames()
+                .Where(i => i.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
+                .Select(i => new TranslationInfo
+                {
+                    Locale = Path.GetFileNameWithoutExtension(i.Substring(basePath.Length)),
+                    EmbeddedResourcePath = i
+
+                }).ToArray();
         }
 
         private Guid _id = new Guid("6C3B6965-C257-47C2-AA02-64457AE21D91");
@@ -39,13 +66,15 @@ namespace MediaBrowser.Plugins.PushOverNotifications
             get { return _id; }
         }
 
+        public static string StaticName = "Pushover Notifications";
+
         /// <summary>
         /// Gets the name of the plugin
         /// </summary>
         /// <value>The name.</value>
         public override string Name
         {
-            get { return "Pushover Notifications"; }
+            get { return StaticName; }
         }
 
         /// <summary>
@@ -73,11 +102,5 @@ namespace MediaBrowser.Plugins.PushOverNotifications
                 return ImageFormat.Png;
             }
         }
-
-        /// <summary>
-        /// Gets the instance.
-        /// </summary>
-        /// <value>The instance.</value>
-        public static Plugin Instance { get; private set; }
     }
 }

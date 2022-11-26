@@ -3,46 +3,42 @@ using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Plugins.PushOverNotifications.Configuration;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Emby.Notifications;
+using MediaBrowser.Controller.Configuration;
 
 namespace MediaBrowser.Plugins.PushOverNotifications
 {
-    public class Notifier : INotificationService
+    public class Notifier : INotifier
     {
-        private readonly ILogger _logger;
-        private readonly IHttpClient _httpClient;
+        private IServerConfigurationManager _config;
+        private ILogger _logger;
+        private IHttpClient _httpClient;
 
-        public Notifier(ILogManager logManager, IHttpClient httpClient)
+        public static string TestNotificationId = "system.pushovernotificationtest";
+        public Notifier(IServerConfigurationManager config, ILogger logger, IHttpClient httpClient)
         {
-            _logger = logManager.GetLogger(GetType().Name);
+            _config = config;
+            _logger = logger;
             _httpClient = httpClient;
-        }
-
-        public bool IsEnabledForUser(User user)
-        {
-            var options = GetOptions(user);
-
-            return options != null && IsValid(options) && options.Enabled;
-        }
-
-        private PushOverOptions GetOptions(User user)
-        {
-            return Plugin.Instance.Configuration.Options
-                .FirstOrDefault(i => string.Equals(i.MediaBrowserUserId, user.Id.ToString("N"), StringComparison.OrdinalIgnoreCase));
         }
 
         public string Name
         {
-            get { return Plugin.Instance.Name; }
+            get { return Plugin.StaticName; }
         }
 
-        public async Task SendNotification(UserNotification request, CancellationToken cancellationToken)
+        public NotificationInfo[] GetConfiguredNotifications()
         {
-            var options = GetOptions(request.User);
+            return _config.GetConfiguredNotifications();
+        }
+
+        public async Task SendNotification(InternalNotificationRequest request, CancellationToken cancellationToken)
+        {
+            var options = request.Configuration as PushoverNotificationInfo;
 
             var parameters = new Dictionary<string, string>
                 {
@@ -51,7 +47,7 @@ namespace MediaBrowser.Plugins.PushOverNotifications
                 };
 
             // TODO: Improve this with escaping based on what PushOver api requires
-            var messageTitle = request.Name.Replace("&", string.Empty);
+            var messageTitle = request.Title.Replace("&", string.Empty);
 
             if (!string.IsNullOrEmpty(options.DeviceName))
                 parameters.Add("device", options.DeviceName);
@@ -78,12 +74,6 @@ namespace MediaBrowser.Plugins.PushOverNotifications
             {
 
             }
-        }
-
-        private bool IsValid(PushOverOptions options)
-        {
-            return !string.IsNullOrEmpty(options.UserKey) &&
-                !string.IsNullOrEmpty(options.Token);
         }
     }
 }
