@@ -9,48 +9,50 @@ using System.Threading;
 using System.Threading.Tasks;
 using Emby.Notifications;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller;
 
 namespace MediaBrowser.Plugins.PushOverNotifications
 {
-    public class Notifier : INotifier
+    public class Notifier : IUserNotifier
     {
-        private IServerConfigurationManager _config;
         private ILogger _logger;
+        private IServerApplicationHost _appHost;
         private IHttpClient _httpClient;
 
-        public static string TestNotificationId = "system.pushovernotificationtest";
-        public Notifier(IServerConfigurationManager config, ILogger logger, IHttpClient httpClient)
+        public Notifier(ILogger logger, IServerApplicationHost applicationHost, IHttpClient httpClient)
         {
-            _config = config;
             _logger = logger;
+            _appHost = applicationHost;
             _httpClient = httpClient;
         }
 
-        public string Name
-        {
-            get { return Plugin.StaticName; }
-        }
+        private Plugin Plugin => _appHost.Plugins.OfType<Plugin>().First();
 
-        public NotificationInfo[] GetConfiguredNotifications()
-        {
-            return _config.GetConfiguredNotifications();
-        }
+        public string Name => Plugin.StaticName;
+
+        public string Key => "pushovernotifications";
+
+        public string SetupModuleUrl => Plugin.NotificationSetupModuleUrl;
 
         public async Task SendNotification(InternalNotificationRequest request, CancellationToken cancellationToken)
         {
-            var options = request.Configuration as PushoverNotificationInfo;
+            var options = request.Configuration.Options;
+
+            options.TryGetValue("Token", out string token);
+            options.TryGetValue("UserKey", out string userKey);
+            options.TryGetValue("DeviceName", out string deviceName);
 
             var parameters = new Dictionary<string, string>
                 {
-                    {"token", options.Token},
-                    {"user", options.UserKey},
+                    {"token", token},
+                    {"user", userKey},
                 };
 
             // TODO: Improve this with escaping based on what PushOver api requires
             var messageTitle = request.Title.Replace("&", string.Empty);
 
-            if (!string.IsNullOrEmpty(options.DeviceName))
-                parameters.Add("device", options.DeviceName);
+            if (!string.IsNullOrEmpty(deviceName))
+                parameters.Add("device", deviceName);
 
             if (string.IsNullOrEmpty(request.Description))
                 parameters.Add("message", messageTitle);
@@ -59,8 +61,6 @@ namespace MediaBrowser.Plugins.PushOverNotifications
                 parameters.Add("title", messageTitle);
                 parameters.Add("message", request.Description);
             }
-
-            _logger.Debug("PushOver to Token : {0} - {1} - {2}", options.Token, options.UserKey, request.Description);
 
             var httpRequestOptions = new HttpRequestOptions
             {

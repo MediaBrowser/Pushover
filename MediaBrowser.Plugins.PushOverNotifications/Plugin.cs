@@ -15,34 +15,27 @@ namespace MediaBrowser.Plugins.PushOverNotifications
     /// </summary>
     public class Plugin : BasePlugin, IHasWebPages, IHasThumbImage, IHasTranslations
     {
+        private const string EditorJsName = "pushovernotificationeditorjs";
+
         public IEnumerable<PluginPageInfo> GetPages()
         {
             return new[]
             {
                 new PluginPageInfo
                 {
-                    Name = "pushovernotifications",
-                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushover.html",
-                    EnableInMainMenu = true,
-                    MenuIcon = "notifications"
-                },
-                new PluginPageInfo
-                {
-                    Name = "pushovernotificationsjs",
-                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushover.js"
-                },
-                new PluginPageInfo
-                {
-                    Name = "pushovernotificationeditorjs",
-                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushovereditor.js"
+                    Name = EditorJsName,
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.entryeditor.js"
                 },
                 new PluginPageInfo
                 {
                     Name = "pushovereditortemplate",
-                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.pushovereditor.template.html"
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.entryeditor.template.html",
+                    IsMainConfigPage = false
                 }
             };
         }
+
+        public string NotificationSetupModuleUrl => GetPluginPageUrl(EditorJsName);
 
         public TranslationInfo[] GetTranslations()
         {
@@ -66,7 +59,7 @@ namespace MediaBrowser.Plugins.PushOverNotifications
             get { return _id; }
         }
 
-        public static string StaticName = "Pushover Notifications";
+        public static string StaticName = "Pushover";
 
         /// <summary>
         /// Gets the name of the plugin
@@ -74,7 +67,7 @@ namespace MediaBrowser.Plugins.PushOverNotifications
         /// <value>The name.</value>
         public override string Name
         {
-            get { return StaticName; }
+            get { return StaticName + " Notifications"; }
         }
 
         /// <summary>
