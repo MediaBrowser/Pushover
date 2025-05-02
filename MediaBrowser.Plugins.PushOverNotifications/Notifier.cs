@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Emby.Notifications;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller;
+using System.Web;
 
 namespace MediaBrowser.Plugins.PushOverNotifications
 {
@@ -41,6 +42,7 @@ namespace MediaBrowser.Plugins.PushOverNotifications
             options.TryGetValue("Token", out string token);
             options.TryGetValue("UserKey", out string userKey);
             options.TryGetValue("DeviceName", out string deviceName);
+            options.TryGetValue("Priority", out string priority);
 
             var parameters = new Dictionary<string, string>
                 {
@@ -48,8 +50,7 @@ namespace MediaBrowser.Plugins.PushOverNotifications
                     {"user", userKey},
                 };
 
-            // TODO: Improve this with escaping based on what PushOver api requires
-            var messageTitle = request.Title.Replace("&", string.Empty);
+            var messageTitle = HttpUtility.UrlEncode(request.Title);
 
             if (!string.IsNullOrEmpty(deviceName))
                 parameters.Add("device", deviceName);
@@ -58,9 +59,13 @@ namespace MediaBrowser.Plugins.PushOverNotifications
                 parameters.Add("message", messageTitle);
             else
             {
+                var description = HttpUtility.UrlEncode(request.Description);
                 parameters.Add("title", messageTitle);
-                parameters.Add("message", request.Description);
+                parameters.Add("message", description);
             }
+
+            if (!string.IsNullOrEmpty(priority))
+                parameters.Add("priority", priority);
 
             var httpRequestOptions = new HttpRequestOptions
             {
