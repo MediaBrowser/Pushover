@@ -10,6 +10,7 @@
         entry.Options.Token = context.querySelector('.txtToken').value;
         entry.Options.UserKey = context.querySelector('.txtUserKey').value;
         entry.Options.DeviceName = context.querySelector('.txtDeviceName').value;
+        entry.Options.Priority = context.querySelector('.selectPriority').value;
     };
 
     EntryEditor.setFormValues = function (context, entry) {
@@ -18,6 +19,7 @@
         context.querySelector('.txtToken').value = entry.Options.Token || '';
         context.querySelector('.txtUserKey').value = entry.Options.UserKey || '';
         context.querySelector('.txtDeviceName').value = entry.Options.DeviceName || '';
+        context.querySelector('.selectPriority').value = entry.Options.Priority || '0';
     };
 
     EntryEditor.loadTemplate = function (context) {
